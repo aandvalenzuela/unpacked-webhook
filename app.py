@@ -2,6 +2,7 @@ from flask import Flask
 from flask import request
 
 import pprint
+import os
 
 app = Flask(__name__)
 
@@ -35,8 +36,16 @@ def publish_message(action, image):
     with open(notification_file, 'a+') as f:
         f.write(f'{image}\n')
 
-    message = f'{action}|{image}'
     with open('notifications.txt', 'a+') as f:
+        if os.stat('notifications.txt').st_size == 0:
+            current_id = 0
+        else:
+            f.seek(0)
+            last_line = f.readlines()[-1]
+            last_line_id = last_line.split("|")[0]
+            current_id = int(last_line_id) + 1
+
+        message = f'{str(current_id)}|{action}|{image}'
         f.write(f'{message}\n')
 
     print(f'{action}|{image}')

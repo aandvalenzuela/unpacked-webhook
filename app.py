@@ -32,9 +32,6 @@ def catch_all(p):
     return "ko", 500
 
 def publish_message(action, image):
-    notification_file = f'{action}.notifications.txt'
-    with open(notification_file, 'a+') as f:
-        f.write(f'{image}\n')
 
     with open('notifications.txt', 'a+') as f:
         if os.stat('notifications.txt').st_size == 0:

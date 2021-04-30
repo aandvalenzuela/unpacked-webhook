@@ -10,7 +10,6 @@ app = Flask(__name__)
 def catch_all(p):
     try:
         for (action, image) in handle_harbor(request.json):
-
             publish_message(action, image)
 
         return "ok"
@@ -79,14 +78,16 @@ def handle_harbor(rjson):
         for event in rjson['event_data']['resources']:
             resource_url = event['resource_url']
             image = f'https://{resource_url}'
-
             yield (action, image)
 
     elif action == 'replication':
         replication = rjson['event_data']['replication']
         registry_info = replication["dest_resource"]
         destination = f'{registry_info["endpoint"]}/{registry_info["namespace"]}'
-        pprint.pprint(replication)
+        for event in rjson['event_data']['replication']['successful_artifact']:
+            image_name = event['name_tag'].split(" ")[0]
+        image = str(destination + '/' + image_name)
+        yield (action, image)
 
 if __name__ == '__main__':
     app.run()

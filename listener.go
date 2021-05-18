@@ -5,30 +5,7 @@ import (
   "fmt"
   "log"
   "os"
-  "time"
 )
-
-func watchFile(filePath string) error {
-    initialStat, err := os.Stat(filePath)
-    if err != nil {
-        return err
-    }
-
-    for {
-        stat, err := os.Stat(filePath)
-        if err != nil {
-            return err
-        }
-
-        if stat.Size() != initialStat.Size() || stat.ModTime() != initialStat.ModTime() {
-            break
-        }
-
-        time.Sleep(1 * time.Second)
-    }
-
-    return nil
-}
 
 func readLines(path string) ([]string, error) {
   file, err := os.Open(path)
@@ -45,35 +22,49 @@ func readLines(path string) ([]string, error) {
   return lines, scanner.Err()
 }
 
+func indexOf(element string, data []string) (int) {
+   for k, v := range data {
+       if element == v {
+           return k
+       }
+   }
+   return -1    //not found.
+}
+
 func main() {
+  var added_lines []string
   file_name := "notifications.txt"
+
+  // read line by line
+  lines, err := readLines(file_name)
+  if err != nil {
+    log.Fatalf("readLines: %s", err)
+  }
+  // print file contents
+  num_lines := len(lines) - 1
+  last_line := lines[num_lines]
+
   for {
-    doneChan := make(chan bool)
-
-    go func(doneChan chan bool) {
-        defer func() {
-            doneChan <- true
-        }()
-
-        err := watchFile(file_name)
-        if err != nil {
-            fmt.Println(err)
-        }
-
-        fmt.Println("New webhook notification received")
-    }(doneChan)
-
-    <-doneChan
-
     // read line by line
     lines, err := readLines(file_name)
     if err != nil {
       log.Fatalf("readLines: %s", err)
     }
-    // print file contents
-    num_lines := len(lines)
-    last_line := lines[num_lines-1]
-    fmt.Println(last_line)
+
+    current_num_lines := len(lines) - 1
+    current_last_line := lines[num_lines]
+
+    if num_lines != current_num_lines {
+      index := indexOf(last_line, lines)
+      added_lines = lines[index+1:]
+      for k_new, v_new := range added_lines {
+	fmt.Println("index:", k_new)
+	fmt.Println("content:", v_new)
+      }
+      added_lines = nil
+      num_lines = current_num_lines
+      last_line = current_last_line
+    }
   }
 }
 
